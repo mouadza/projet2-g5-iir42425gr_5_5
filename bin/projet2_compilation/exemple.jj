@@ -8,9 +8,6 @@ import java.util.*;
 public class SimpleXmlToJson {
 
     public static void main(String[] args) throws ParseException, IOException {
-        
-
-        // Read and preprocess the XML file
         File xmlFile = new File("src/exemple.xml"); 
         if (!xmlFile.exists()) {
             System.out.println("File not found: ");

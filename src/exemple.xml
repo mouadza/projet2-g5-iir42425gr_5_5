@@ -10,14 +10,14 @@
         <id>2</id>
         <title>To Kill a Mockingbird</title>
         <author>Harper Lee</author>
-        <publisher>J.B. Lippincott & Co.</publisher>
+        <publisher>J.B. Lippincott &amp; Co.</publisher>
         <price>7.99</price>
     </book>
     <book>
         <id>3</id>
         <title>1984</title>
         <author>George Orwell</author>
-        <publisher>Secker & Warburg</publisher>
+        <publisher>Secker &amp; Warburg</publisher>
         <price>8.99</price>
     </book>
 </library>
