@@ -1,0 +1,23 @@
+<library>
+    <book>
+        <id>1</id>
+        <title>The Catcher in the Rye</title>
+        <author>J.D. Salinger</author>
+        <publisher>Little, Brown and Company</publisher>
+        <price>10.99</price>
+    </book>
+    <book>
+        <id>2</id>
+        <title>To Kill a Mockingbird</title>
+        <author>Harper Lee</author>
+        <publisher>J.B. Lippincott & Co.</publisher>
+        <price>7.99</price>
+    </book>
+    <book>
+        <id>3</id>
+        <title>1984</title>
+        <author>George Orwell</author>
+        <publisher>Secker & Warburg</publisher>
+        <price>8.99</price>
+    </book>
+</library>

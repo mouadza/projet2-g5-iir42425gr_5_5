@@ -1,0 +1,131 @@
+PARSER_BEGIN(SimpleXmlToJson)
+
+package projet2_compilation;
+
+import java.io.*;
+import java.util.*;
+
+public class SimpleXmlToJson {
+
+    public static void main(String[] args) throws ParseException, IOException {
+        
+
+        // Read and preprocess the XML file
+        File xmlFile = new File("src/exemple.xml"); 
+        if (!xmlFile.exists()) {
+            System.out.println("File not found: ");
+            return;
+        }
+
+        String cleanedXml = preprocessXmlFile(xmlFile);
+        SimpleXmlToJson parser = new SimpleXmlToJson(new ByteArrayInputStream(cleanedXml.getBytes()));
+        Map<String, Object> json = parser.parseXmlToJson();
+        System.out.println("Converted JSON:");
+        System.out.println(formatJson(json, 0));
+    }
+
+    // Preprocess XML file to remove unnecessary spaces and line breaks
+    private static String preprocessXmlFile(File file) throws IOException {
+        StringBuilder content = new StringBuilder();
+        try (BufferedReader reader = new BufferedReader(new FileReader(file))) {
+            String line;
+            while ((line = reader.readLine()) != null) {
+                content.append(line.trim()); // Remove leading/trailing whitespace from each line
+            }
+        }
+        return content.toString(); // Return cleaned XML as a single string
+    }
+
+    public static String formatJson(Map<String, Object> map, int indent) {
+        StringBuilder sb = new StringBuilder();
+        String indentation = "  ".repeat(indent);
+        sb.append("{\n");
+        for (Map.Entry<String, Object> entry : map.entrySet()) {
+            sb.append(indentation).append("  \"").append(entry.getKey()).append("\": ");
+            if (entry.getValue() instanceof Map) {
+                sb.append(formatJson((Map<String, Object>) entry.getValue(), indent + 1));
+            } else if (entry.getValue() instanceof List) {
+                sb.append("[\n");
+                for (Object item : (List<?>) entry.getValue()) {
+                    if (item instanceof Map) {
+                        sb.append(formatJson((Map<String, Object>) item, indent + 1)).append(",\n");
+                    } else {
+                        sb.append(indentation).append("  \"").append(item).append("\"").append(",\n");
+                    }
+                }
+                if (sb.length() > 1) sb.setLength(sb.length() - 2); // Remove trailing comma and newline
+                sb.append("\n").append(indentation).append("]");
+            } else {
+                sb.append("\"").append(entry.getValue()).append("\"");
+            }
+            sb.append(",\n");
+        }
+        if (sb.length() > 1) sb.setLength(sb.length() - 2); // Remove trailing comma and newline
+        sb.append("\n").append(indentation).append("}");
+        return sb.toString();
+    }
+}
+
+PARSER_END(SimpleXmlToJson)
+
+// Define tokens for XML parsing
+SKIP : { " " | "\t" | "\n" | "\r" } // Skip whitespace
+TOKEN : { < TAG_OPEN : "<" > }
+TOKEN : { < TAG_CLOSE : ">" > }
+TOKEN : { < TAG_END : "</" > }
+TOKEN : { < TEXT : (~["<", ">"])+ > }
+
+// Main rule to parse XML to JSON
+Map<String, Object> parseXmlToJson() :
+{
+    Map<String, Object> json = new HashMap<>();
+    Token nameToken;
+    Token closingToken;
+}
+{
+    <TAG_OPEN> nameToken=<TEXT> <TAG_CLOSE>
+    {
+        json.put(nameToken.image.trim(), parseContent());
+    }
+    <TAG_END> closingToken=<TEXT> <TAG_CLOSE>
+    {
+        if (!nameToken.image.trim().equals(closingToken.image.trim())) {
+            throw new ParseException("Mismatched closing tag: </" + closingToken.image + "> for <" + nameToken.image + ">");
+        }
+    }
+    { return json; }
+}
+
+// Rule to parse content within tags (handles text or nested elements)
+Object parseContent() :
+{
+    Map<String, Object> nested = new HashMap<>();
+    List<Object> list = null;
+    Token contentToken;
+}
+{
+    (
+        (
+            <TAG_OPEN> contentToken=<TEXT> <TAG_CLOSE>
+            {
+                Object child = parseContent();
+                if (nested.containsKey(contentToken.image.trim())) {
+                    if (list == null) {
+                        list = new ArrayList<>();
+                        list.add(nested.get(contentToken.image.trim()));
+                        nested.put(contentToken.image.trim(), list);
+                    }
+                    list.add(child);
+                } else {
+                    nested.put(contentToken.image.trim(), child);
+                }
+            }
+            <TAG_END> <TEXT> <TAG_CLOSE>
+        )
+        |
+        contentToken=<TEXT>
+        { return contentToken.image.trim(); }
+    )*
+		{ return nested.isEmpty() ? null : nested; }
+    
+}
